@@ -8,9 +8,10 @@
 tool
 extends WindowDialog
 
-const KOTLIN_ZIP := "res://kotlin_template.zip"
-const GITHUB_USER := "utopia-rise"
-const DOWNLOAD_FILE := "https://github.com/%s/godot-kotlin-editor-plugin/releases/latest/download/%s" % [GITHUB_USER, KOTLIN_ZIP]
+const KOTLIN_ZIP := "kotlin_template.zip"
+const LOCAL_KOTLIN_ZIP := "res://%s" % KOTLIN_ZIP
+const GITHUB_USER := " utopia-rise"
+const DOWNLOAD_FILE := "https://github.com/%s/godot-kotlin-project-template/releases/latest/download/%s" % [GITHUB_USER, KOTLIN_ZIP]
 
 onready var buildDialogScene := preload("res://addons/kotlin/build_dialog/BuildDialog.tscn")
 onready var setupDialogScene := preload("res://addons/kotlin/tools/SetupDialog.tscn")
@@ -40,9 +41,9 @@ func step_1_create_structure():
 	
 	print("Step 3: Create project structure")
 	var zipFile := File.new()
-	if zipFile.file_exists(KOTLIN_ZIP):
+	if zipFile.file_exists(LOCAL_KOTLIN_ZIP):
 		print("Template already downloaded")
-		unzip(KOTLIN_ZIP)
+		unzip(LOCAL_KOTLIN_ZIP)
 	else:
 		print("Downloading template")
 		download()
@@ -50,6 +51,7 @@ func step_1_create_structure():
 
 func download():
 	print("Starting Download...")
+	print(DOWNLOAD_FILE)
 	# Create an HTTP request node and connect its completion signal.
 	var http_request = HTTPRequest.new()
 	add_child(http_request)
@@ -65,11 +67,11 @@ func _http_request_completed(result: int, response_code: int, headers: PoolStrin
 	if response_code == 200:
 		print("Download complete.")
 		var zipFile := File.new()
-		zipFile.open(KOTLIN_ZIP, File.WRITE)
+		zipFile.open(LOCAL_KOTLIN_ZIP, File.WRITE)
 		zipFile.store_buffer(body)
 		zipFile.close()
 		
-		unzip(KOTLIN_ZIP)
+		unzip(LOCAL_KOTLIN_ZIP)
 	else:
 		print("Failed to download zip")
 		setupDialog.hide()
@@ -111,7 +113,7 @@ func background_unzip(filePath: String):
 func step_2_cleanup():
 	print("Step 2: Clean up")
 	var dir = Directory.new()
-	dir.remove(KOTLIN_ZIP)
+	dir.remove(LOCAL_KOTLIN_ZIP)
 	
 	step_3_configure()
 
