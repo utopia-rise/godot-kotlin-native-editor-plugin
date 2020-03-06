@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://addons/kotlin/progress_dialog/ProgressDialog.tscn" type="PackedScene" id=1]
+
+[node name="ProgressDialog" instance=ExtResource( 1 )]
+window_title = "Kotlin Setup"
+
+[node name="ProgressBar" parent="VBoxContainer" index="1"]
+value = 63.76
