@@ -11,3 +11,5 @@ data_*/
 # Kotlin-specific ignores
 build/
 .gradle/
+kotlin/
+kotlin.gdnlib

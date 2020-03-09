@@ -11,7 +11,9 @@ extends WindowDialog
 const KOTLIN_ZIP := "kotlin_template.zip"
 const LOCAL_KOTLIN_ZIP := "res://%s" % KOTLIN_ZIP
 const GITHUB_USER := "utopia-rise"
-const DOWNLOAD_FILE := "https://github.com/%s/godot-kotlin-project-template/releases/latest/download/%s" % [GITHUB_USER, KOTLIN_ZIP]
+const API_URL := "https://api.github.com/repos/%s/godot-kotlin-project-template/releases/latest" % [GITHUB_USER]
+# List of files in the Project Template repo that we don't actually want in everyone's for-real projects
+const FILE_BLACK_LIST := ["README.md", "LICENSE"]
 
 onready var buildDialogScene := preload("res://addons/kotlin/build_dialog/BuildDialog.tscn")
 onready var setupDialogScene := preload("res://addons/kotlin/tools/SetupDialog.tscn")
@@ -46,19 +48,39 @@ func step_1_create_structure():
 		unzip(LOCAL_KOTLIN_ZIP)
 	else:
 		print("Downloading template")
-		download()
+		find_download_url()
 
 
-func download():
+func find_download_url():
+	var http_request = HTTPRequest.new()
+	add_child(http_request)
+	print("Start API request")
+	http_request.connect("request_completed", self, "api_request_complete")
+	var error = http_request.request(API_URL)
+	if error != OK:
+		push_error("An error occurred in the HTTP request.")
+
+func api_request_complete(result: int, response_code: int, headers: PoolStringArray, body: PoolByteArray):
+	print("API request complete")
+	var parsed = JSON.parse(body.get_string_from_utf8())
+	var json = parsed.result
+	var zipballUrl = json["zipball_url"]
+	
+	if response_code == 200:
+		download_template(zipballUrl)
+	else:
+		print("Failed to get download URL")
+
+func download_template(url):
 	print("Starting Download...")
-	print(DOWNLOAD_FILE)
+	print(url)
 	# Create an HTTP request node and connect its completion signal.
 	var http_request = HTTPRequest.new()
 	add_child(http_request)
 	http_request.connect("request_completed", self, "_http_request_completed")
 	
 	# Perform the HTTP request. The URL below returns some JSON as of writing.
-	var error = http_request.request(DOWNLOAD_FILE)
+	var error = http_request.request(url)
 	if error != OK:
 		push_error("An error occurred in the HTTP request.")
 
@@ -66,6 +88,8 @@ func download():
 func _http_request_completed(result: int, response_code: int, headers: PoolStringArray, body: PoolByteArray):
 	if response_code == 200:
 		print("Download complete.")
+		print(headers)
+		
 		var zipFile := File.new()
 		zipFile.open(LOCAL_KOTLIN_ZIP, File.WRITE)
 		zipFile.store_buffer(body)
@@ -86,28 +110,82 @@ func background_unzip(filePath: String):
 	var dir := Directory.new()
 	dir.open("res://")
 	
+	var rootKotlinDir := 'kotlin/'
+	dir.make_dir(rootKotlinDir)
+	
 	var gdunzip = load('res://addons/kotlin/gdunzip/gdunzip.gd').new()
 	var loaded = gdunzip.load(filePath)
 	if loaded:
 		for f in gdunzip.files.values():
 			var file = File.new()
-			print(f.file_name)
-			if f.file_name.find("/") > -1:
-				
-				var pathParts = f.file_name.split("/", false)
-				pathParts.remove(pathParts.size()-1) # Remove the file
-				var justDirectories := ""
-				for part in pathParts:
-					justDirectories += "%s/" % part
-					print("Making directories: %s" % justDirectories)
-					dir.make_dir_recursive(justDirectories)
+			var fileName = get_file_name(f.file_name)
 			
-			file.open(f.file_name, File.WRITE)
-			var uncompressed = gdunzip.uncompress(f.file_name)
-			file.store_buffer(uncompressed)
-			file.close()
+			# Skip empty file names, and files on the black list
+			if fileName.length() > 0 and  is_not_black_listed(fileName):
+			
+				# Skip directories, and files included in the black list
+				if f.file_name.find("/") > -1:
+					print(fileName)
+					
+					var pathParts = f.file_name.split("/", false)
+					pathParts.remove(pathParts.size()-1) # Remove the file
+					var justDirectories := rootKotlinDir
+					# Github source downloads contain a parent dir with a changing name
+					# we want to skip that as we'll just use a constant dir name to
+					# contain everything
+					var firstSkipped := false
+					# Ensure all of the directories in the structure exist
+					for part in pathParts:
+						if firstSkipped:
+							justDirectories += "%s/" % part
+							print("Making directories: %s" % justDirectories)
+							dir.make_dir_recursive(justDirectories)
+						else:
+							firstSkipped = true
+				
+				# Github source downloads have a root directory that we don't care about
+				# So just remove it here
+				var path := remove_root_dir(f.file_name)
+				file.open("%s%s" % [rootKotlinDir, path], File.WRITE)
+				
+				# Finally actually decompress and write the file
+				print("Extracting file: %s" % fileName)
+				var uncompressed = gdunzip.uncompress(f.file_name)
+				file.store_buffer(uncompressed)
+				file.close()
 	
 	call_deferred("step_2_cleanup")
+
+
+func is_not_black_listed(fileName: String) -> bool:
+	var isOnBlackList := true
+	print("Searching list BL")
+	for name in FILE_BLACK_LIST:
+		print("BL name: |%s|%s| " % [name, fileName])
+		if name == fileName:
+			print("IS ON BL")
+			isOnBlackList = false
+			break
+	
+	return isOnBlackList
+
+
+func get_file_name(path: String) -> String:
+	var lastSegment := path.find_last("/")
+	if lastSegment == -1:
+		return path.strip_edges()
+	else:
+		var x = path.substr(lastSegment+1).strip_edges()
+		return x
+
+
+# Removes the first directory from the path
+func remove_root_dir(path: String) -> String:
+	var firstPathBreak := path.find("/")
+	if firstPathBreak == -1:
+		return path
+	else:
+		return path.substr(firstPathBreak+1, path.length())
 
 
 func step_2_cleanup():
