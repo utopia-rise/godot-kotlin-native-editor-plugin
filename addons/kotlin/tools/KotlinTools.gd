@@ -59,17 +59,25 @@ func find_download_url():
 	var error = http_request.request(API_URL)
 	if error != OK:
 		push_error("An error occurred in the HTTP request.")
+		setup_failed()
 
 func api_request_complete(result: int, response_code: int, headers: PoolStringArray, body: PoolByteArray):
 	print("API request complete")
 	var parsed = JSON.parse(body.get_string_from_utf8())
 	var json = parsed.result
-	var zipballUrl = json["zipball_url"]
 	
-	if response_code == 200:
-		download_template(zipballUrl)
+	if json.has("zipball_url"):
+		var zipballUrl = json["zipball_url"]
+		
+		if response_code == 200:
+			download_template(zipballUrl)
+		else:
+			push_error("Failed to get download URL")
+			setup_failed()
 	else:
-		print("Failed to get download URL")
+		push_error("Failed to get download URL")
+		setup_failed()
+
 
 func download_template(url):
 	print("Starting Download...")
@@ -98,7 +106,7 @@ func _http_request_completed(result: int, response_code: int, headers: PoolStrin
 		unzip(LOCAL_KOTLIN_ZIP)
 	else:
 		print("Failed to download zip")
-		setupDialog.hide()
+		setup_failed()
 
 
 func unzip(filePath: String):
@@ -253,6 +261,16 @@ func setup_complete():
 	var completeDialog := AcceptDialog.new()
 	completeDialog.window_title = "Kotlin setup"
 	completeDialog.dialog_text = "Setup complete!"
+	get_parent().add_child(completeDialog)
+	completeDialog.popup_centered()
+
+
+func setup_failed():
+	setupDialog.hide()
+	
+	var completeDialog := AcceptDialog.new()
+	completeDialog.window_title = "Kotlin setup"
+	completeDialog.dialog_text = "Setup failed"
 	get_parent().add_child(completeDialog)
 	completeDialog.popup_centered()
 
