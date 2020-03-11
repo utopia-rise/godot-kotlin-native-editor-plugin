@@ -17,7 +17,7 @@ const FILE_BLACK_LIST := ["README.md", "LICENSE"]
 
 onready var buildDialogScene := preload("res://addons/kotlin/build_dialog/BuildDialog.tscn")
 onready var setupDialogScene := preload("res://addons/kotlin/tools/SetupDialog.tscn")
-onready var setupDialog: WindowDialog = setupDialogScene.instance()
+onready var setupDialog: SetupDialog = setupDialogScene.instance()
 
 onready var GradleProperties := load("res://addons/kotlin/tools/GradleProperties.gd")
 
@@ -42,6 +42,7 @@ func _on_AddSupportButton_pressed():
 
 
 func step_1_create_structure():
+	setupDialog.set_step_text("Step 1/4:\nCreating structure")
 	add_child(setupDialog)
 	setupDialog.show()
 	
@@ -56,6 +57,8 @@ func step_1_create_structure():
 
 
 func find_download_url():
+	setupDialog.set_step_text("Step 1/4:\nFinding template")
+	
 	var http_request = HTTPRequest.new()
 	add_child(http_request)
 	print("Start API request")
@@ -84,6 +87,8 @@ func api_request_complete(result: int, response_code: int, headers: PoolStringAr
 
 
 func download_template(url):
+	setupDialog.set_step_text("Step 1/4:\nDownloading template")
+	
 	print("Starting Download...")
 	print(url)
 	# Create an HTTP request node and connect its completion signal.
@@ -113,6 +118,8 @@ func _http_request_completed(result: int, response_code: int, headers: PoolStrin
 
 
 func unzip(filePath: String):
+	setupDialog.set_step_text("Step 1/4:\nUnzipping template")
+	
 	unzipThread = Thread.new()
 	unzipThread.start(self, "background_unzip", filePath)
 
@@ -195,6 +202,7 @@ func remove_root_dir(path: String) -> String:
 
 
 func step_2_cleanup():
+	setupDialog.set_step_text("Step 2/4:\nCleaning up")
 	print("Step 2: Clean up")
 	
 	# Dispose of the thread
@@ -209,6 +217,7 @@ func step_2_cleanup():
 
 
 func step_3_configure():
+	setupDialog.set_step_text("Step 3/4:\nConfiguring")
 	print("Step 3: Configure project")
 	
 	if not GradleUtilities.is_windows():
@@ -224,6 +233,7 @@ func step_3_configure():
 
 
 func step_4_create_library():
+	setupDialog.set_step_text("Step 4/4:\nCreating library")
 	print("Step 4: Create GDNative library")
 	
 	# Create the GDNlib file
@@ -255,11 +265,13 @@ func configure_gradle(inSetup: bool = false):
 	if inSetup:
 		buildDialog.connect("build_complete", self, "step_4_create_library")
 	add_child(buildDialog)
+	buildDialog.rect_position.y += setupDialog.rect_size.y
 	buildDialog.show()
 	buildDialog.start_build("config")
 
 
 func setup_complete():
+	setupDialog.set_step_text("All done!")
 	hide()
 	
 	var completeDialog := AcceptDialog.new()
