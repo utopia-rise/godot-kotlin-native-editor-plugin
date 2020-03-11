@@ -4,18 +4,27 @@
 [ext_resource path="res://addons/kotlin/tools/SetupDialog.gd" type="Script" id=2]
 
 [node name="ProgressDialog" instance=ExtResource( 1 )]
-visible = true
 margin_bottom = 94.0
 window_title = "Kotlin Setup"
 script = ExtResource( 2 )
 
-[node name="ProgressBar" parent="VBoxContainer" index="1"]
-value = 50.61
-
-[node name="StepLabel" type="Label" parent="VBoxContainer" index="2"]
-margin_top = 38.0
+[node name="StepLabel" type="Label" parent="VBoxContainer" index="0"]
 margin_right = 200.0
-margin_bottom = 69.0
+margin_bottom = 31.0
 text = "Step 0:
 Installing Kotlin"
 align = 1
+
+[node name="Spacer" type="Label" parent="VBoxContainer" index="1"]
+margin_top = 35.0
+margin_right = 200.0
+margin_bottom = 49.0
+
+[node name="Label" parent="VBoxContainer" index="2"]
+margin_top = 53.0
+margin_bottom = 67.0
+
+[node name="ProgressBar" parent="VBoxContainer" index="3"]
+margin_top = 71.0
+margin_bottom = 87.0
+value = 9.47

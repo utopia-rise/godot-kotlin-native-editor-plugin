@@ -68,6 +68,7 @@ func find_download_url():
 		push_error("An error occurred in the HTTP request.")
 		setup_failed()
 
+
 func api_request_complete(result: int, response_code: int, headers: PoolStringArray, body: PoolByteArray):
 	print("API request complete")
 	var parsed = JSON.parse(body.get_string_from_utf8())
@@ -272,7 +273,7 @@ func configure_gradle(inSetup: bool = false):
 
 func setup_complete():
 	setupDialog.set_step_text("All done!")
-	hide()
+	update_contents()
 	
 	var completeDialog := AcceptDialog.new()
 	completeDialog.window_title = "Kotlin setup"
@@ -304,6 +305,10 @@ func _on_BuildButton_pressed():
 
 # Configure the tool window
 func _on_KotlinToolMenuItem_about_to_show():
+	update_contents()
+
+
+func update_contents():
 	var dir := Directory.new()
 	# Kotlin is already setup, show actions
 	if dir.dir_exists("res://kotlin"):
