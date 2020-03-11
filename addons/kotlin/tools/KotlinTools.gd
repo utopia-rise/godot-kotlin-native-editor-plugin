@@ -33,6 +33,10 @@ onready var armArchSelector: OptionButton = get_node(armArchSelectorPath)
 export(NodePath) var iosIdentityLineEditPath: NodePath
 onready var iosIdentityLineEdit: LineEdit = get_node(iosIdentityLineEditPath)
 
+
+var unzipThread = null
+
+
 func _on_AddSupportButton_pressed():
 	step_1_create_structure()
 
@@ -96,7 +100,6 @@ func download_template(url):
 func _http_request_completed(result: int, response_code: int, headers: PoolStringArray, body: PoolByteArray):
 	if response_code == 200:
 		print("Download complete.")
-		print(headers)
 		
 		var zipFile := File.new()
 		zipFile.open(LOCAL_KOTLIN_ZIP, File.WRITE)
@@ -110,8 +113,8 @@ func _http_request_completed(result: int, response_code: int, headers: PoolStrin
 
 
 func unzip(filePath: String):
-	var thread := Thread.new()
-	thread.start(self, "background_unzip", filePath)
+	unzipThread = Thread.new()
+	unzipThread.start(self, "background_unzip", filePath)
 
 
 func background_unzip(filePath: String):
@@ -133,8 +136,6 @@ func background_unzip(filePath: String):
 			
 				# Skip directories, and files included in the black list
 				if f.file_name.find("/") > -1:
-					print(fileName)
-					
 					var pathParts = f.file_name.split("/", false)
 					pathParts.remove(pathParts.size()-1) # Remove the file
 					var justDirectories := rootKotlinDir
@@ -146,7 +147,7 @@ func background_unzip(filePath: String):
 					for part in pathParts:
 						if firstSkipped:
 							justDirectories += "%s/" % part
-							print("Making directories: %s" % justDirectories)
+							print("Making directory: %s" % justDirectories)
 							dir.make_dir_recursive(justDirectories)
 						else:
 							firstSkipped = true
@@ -167,11 +168,8 @@ func background_unzip(filePath: String):
 
 func is_not_black_listed(fileName: String) -> bool:
 	var isOnBlackList := true
-	print("Searching list BL")
 	for name in FILE_BLACK_LIST:
-		print("BL name: |%s|%s| " % [name, fileName])
 		if name == fileName:
-			print("IS ON BL")
 			isOnBlackList = false
 			break
 	
@@ -198,6 +196,12 @@ func remove_root_dir(path: String) -> String:
 
 func step_2_cleanup():
 	print("Step 2: Clean up")
+	
+	# Dispose of the thread
+	unzipThread.wait_to_finish()
+	unzipThread = null
+	
+	# Clean up the zip file
 	var dir = Directory.new()
 	dir.remove(LOCAL_KOTLIN_ZIP)
 	

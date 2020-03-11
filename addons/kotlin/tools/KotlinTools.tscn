@@ -3,6 +3,7 @@
 [ext_resource path="res://addons/kotlin/tools/KotlinTools.gd" type="Script" id=1]
 
 [node name="KotlinToolMenuItem" type="WindowDialog"]
+visible = true
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -23,7 +24,6 @@ armArchSelectorPath = NodePath("ActionsContainer/ConfigContainer/ArmArchOptionBu
 iosIdentityLineEditPath = NodePath("ActionsContainer/ConfigContainer/iOSIdentityLineEdit")
 
 [node name="SetupContainer" type="VBoxContainer" parent="."]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 8.0
@@ -37,18 +37,18 @@ __meta__ = {
 }
 
 [node name="RichTextLabel" type="RichTextLabel" parent="SetupContainer"]
-margin_top = 4.0
 margin_right = 384.0
-margin_bottom = 84.0
+margin_bottom = 181.0
 rect_min_size = Vector2( 0, 80 )
+size_flags_vertical = 3
 text = "Add Kotlin support for this Godot project.
 
 This will download the Kotlin template and extract it in place."
 
 [node name="CenterContainer" type="CenterContainer" parent="SetupContainer"]
-margin_top = 88.0
+margin_top = 185.0
 margin_right = 384.0
-margin_bottom = 108.0
+margin_bottom = 205.0
 
 [node name="AddSupportButton" type="Button" parent="SetupContainer/CenterContainer"]
 margin_left = 126.0
@@ -61,6 +61,7 @@ __meta__ = {
 }
 
 [node name="ActionsContainer" type="HBoxContainer" parent="."]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 8.0
