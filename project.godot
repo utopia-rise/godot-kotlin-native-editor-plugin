@@ -1,0 +1,46 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=4
+
+_global_script_classes=[ {
+"base": "WindowDialog",
+"class": "BaseProgressDialog",
+"language": "GDScript",
+"path": "res://addons/kotlin/progress_dialog/ProgressDialog.gd"
+}, {
+"base": "BaseProgressDialog",
+"class": "BuildDialog",
+"language": "GDScript",
+"path": "res://addons/kotlin/build_dialog/BuildDialog.gd"
+}, {
+"base": "Node",
+"class": "GradleUtilities",
+"language": "GDScript",
+"path": "res://addons/kotlin/tools/GradleUtilities.gd"
+}, {
+"base": "BaseProgressDialog",
+"class": "SetupDialog",
+"language": "GDScript",
+"path": "res://addons/kotlin/tools/SetupDialog.gd"
+} ]
+_global_script_class_icons={
+"BaseProgressDialog": "",
+"BuildDialog": "",
+"GradleUtilities": "",
+"SetupDialog": ""
+}
+
+[application]
+
+config/name="Kotlin Editor Plugin"
+config/icon="res://icon.png"
+
+[editor_plugins]
+
+enabled=PoolStringArray( "kotlin" )
